@@ -1,0 +1,220 @@
+/* compileDest = ./src/spacex-launch/spacex-launch.css */
+
+//Basics Patterns and colors
+@import "_patterns";
+
+//normalization CSS
+@import "_norms";
+
+:host {
+  align-content: flex-end;
+  align-items: flex-end;
+  box-sizing: border-box;
+  color: #444;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  height: 100vh;
+  padding: 16px;
+  position: relative;
+  text-align: center;
+  width: 150px;
+}
+
+@import "_altitude-lines";
+
+p{
+  white-space: normal;
+}
+
+#landing{
+
+  #landingFalcon{
+    background-size: 10px 15px;
+    background-repeat: no-repeat;    
+    height: 35px;
+    position: absolute;    
+    width: 15px;
+  }
+
+  &[landingsuccess][landingtype="Ocean"] #landingFalcon{
+      background-image: url('../../../images/landing/falcon.svg');
+      top: 34vh;
+      right: 40px;
+  }
+
+  &[landingsuccess][landingtype="ASDS"] #landingFalcon{
+      background-image: url('../../../images/landing/falcon.svg');
+      top: 34.5vh;
+      right: 32px;
+  }
+
+  &[landingsuccess][landingtype="RTLS"] #landingFalcon{
+      background-image: url('../../../images/landing/falcon.svg');
+      top: 36vh;
+      right: 32px;
+  }
+  
+ &:not([landingsuccess]) {
+    &[landingtype="Ocean"], &[landingtype="ASDS"]{
+      #landingFalcon{
+        background-image: url('../../../images/landing/falcon.svg');
+        top: 31vh;
+        right: 40px;
+        transform: rotate(-10deg);
+
+        &:after{
+          background-image: url('../../../images/explosion-grey.svg');
+          background-repeat: no-repeat;
+          background-size: 25px 25px;
+          content: '';
+          display: block;
+          height: 25px;
+          left: 50%;
+          position: absolute;
+          top: 15px;
+          transform: translateX(-50%);
+          width: 25px;
+        }
+      }
+    }
+  }
+
+  #landingPlatform{
+    background-size: 35px 35px;
+    background-repeat: no-repeat;    
+    height: 35px;
+    position: absolute;
+    top: 35vh;
+    right: 30px;
+    width: 35px;
+  }
+
+  &[landingtype="Ocean"] #landingPlatform{
+    background-image: url('../../../images/landing/water.svg');    
+  }
+
+  &[landingtype="ASDS"] #landingPlatform{
+    background-image: url('../../../images/landing/asds.svg');    
+  }
+
+  &[landingtype="RTLS"] #landingPlatform{
+    background-image: url('../../../images/landing/land.svg');    
+  }
+}
+
+#altitude{
+  height: 0;
+  margin: 0 auto;
+  margin-bottom: 8px;
+  order: 1;
+  position: relative;
+  width: 9px;
+  transition: height 1s;
+  transition-delay: 0.5s;
+
+  &:before{
+      background-repeat: no-repeat;
+      background-size: 25px 25px;
+      content: '';
+      display: block;
+      height: 25px;
+      left: 50%;
+      position: absolute;
+      top: -30px;
+      transform: translateX(-50%);
+      width: 25px;
+    }
+
+  &:not([launchsuccess]){
+    &:before{
+      background-image: url('../../../images/explosion.svg');
+    }
+
+    .triangle {
+      polygon, path{
+        fill: red;       
+        border: 1px solid red;        
+      }
+    }
+
+    & + #landing {
+      display: none;
+    }
+  }
+
+  &[launchsuccess][payloadType="Satellite"]:before{
+      background-image: url('../../../images/satellite.svg');
+  }
+
+  &[launchsuccess][payloadType="Satellite"][payloadid="Tesla Roadster"]:before{
+      background-image: url('../../../images/roadster.svg');
+  }
+
+  &[launchsuccess][payloadType~="Dragon"]:before{
+      background-image: url('../../../images/dragon-svg/dragon.svg');
+      background-size: 20px 25px;
+      width: 20px;
+  }
+
+  svg{
+    width: 100%;
+    height: 100%;
+
+    polygon, path{
+      fill: $spacex-blue;
+      border: 1px solid $spacex-blue;
+    }
+  }
+}
+
+#mission{
+  bottom: 7vh;
+  height: 3.5vh;
+  order: 3;
+  width: 100%;
+}
+
+#launchDatetime{
+  height: 10vh;
+  order: 4;
+  width: 100%;
+
+  &[vehicle]:after{
+    border-radius: 50%;
+    content: "";
+    display: block;
+    height: 10px;
+    position: absolute;
+    left: 50%;
+    width: 10px;
+    transform: translateX(-50%) translateY(10px);
+  }
+
+  &[vehicle="falcon1"]:after{
+    background: $falcon-1;
+  }
+
+  &[vehicle="falcon9v1.0"]:after{
+    background: $falcon-9v1;
+  }
+
+  &[vehicle="falcon9v1.1"]:after{
+    background: $falcon-9v11;
+  }
+
+  &[vehicle="falcon9FT"]:after{
+    background: $falcon-9FT;
+  }
+
+  &[vehicle="falconheavyFT"]:after{
+    background: $falcon-heavy;
+  }
+}
+
+
+
+#timeline-link{
+  position: absolute;
+  order: 5;
+}

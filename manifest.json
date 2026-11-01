@@ -1,0 +1,7 @@
+{
+  "name": "SpaceX Launch Timeline",
+  "short_name": "Launch Timeline",
+  "description": "SpaceX Launch Timeline",
+  "start_url": "/",
+  "display": "standalone"
+}

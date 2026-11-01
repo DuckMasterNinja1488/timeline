@@ -1,0 +1,27 @@
+<link rel="import" href="../../../bower_components/polymer/polymer-element.html">
+
+<dom-module id="payload-fairing">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+
+    <img src="[[importPath]]/fairing.svg">
+
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+     class PayloadFairing extends Polymer.Element {
+       static get is() { return 'payload-fairing'; }
+     }
+
+
+     window.customElements.define(PayloadFairing.is, PayloadFairing);
+   </script>
+ </dom-module>

@@ -1,0 +1,132 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/neon-animation/web-animations.html">
+<link rel="import" href="../../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../spacex-launch/spacex-launch.html">
+<link rel="import" href="../mission-info/mission-info.html">
+
+<dom-module id="launch-timeline-app">
+  <template>
+    <link rel="stylesheet" href="[[importPath]]/launch-timeline-app.css">
+
+    <iron-ajax
+        auto
+        url="https://api.spacexdata.com/v2/launches"
+        handle-as="json"
+        last-response="{{launches}}"
+        on-response="hideLoader">
+    </iron-ajax>
+
+    <header>
+      <h2>Launch Timeline</h2>
+      <input type="text" placeholder="Filter..." value="{{missionFilter::input}}">
+      <select class="yearSelect" name="yearSelect" id="yearSelect" value="{{yearFilter::change}}">
+        <option value="all">All</option>
+        <template is="dom-repeat" items=[[launchYears]]>
+          <option value$="[[item]]">[[item]]</option>
+        </template>
+      </select>
+    </header>
+    <div class="scroll-area">
+      <div id="elon">
+        <div class="altitude-line" id="gto"/></div>
+        <div class="altitude-line" id="leo"/></div>
+        <div class="altitude-line" id="karman"/></div>
+        <img src="./images/savior.svg" />
+        <p>Elon Musk</p>
+      </div>
+      <template is="dom-repeat" items="[[launches]]" as="launch" initialCount="20" filter="{{filterYear(yearFilter)}}">
+        <spacex-launch launch-data="[[launch]]" year$="{{launch.launch_year}}"></spacex-launch>
+      </template>
+      <div id="timeline"></div>
+    </div>
+    <div class="scrim"></div>
+    <mission-info launch-data="[[_activeLaunch]]"></mission-info>
+    <div id="loader">
+      <div id='container'>
+        <div class='triangle'></div>
+        <div class='triangle'></div>
+        <div class='triangle'></div>
+        <div class='triangle'></div>
+        <div class='triangle'></div>
+      </div>
+      <p>Preparing to launch...</p>
+    </div>
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class LaunchTimelineApp extends Polymer.Element {
+      static get is() { return 'launch-timeline-app'; }
+      static get properties() {
+        return {
+          launches: {
+            type: Array
+          },
+          launchYears: {
+            type: Array,
+            computed: 'getLaunchYears(launches)'
+          },
+          yearFilter: {
+            type: String
+          },
+          _activeLaunch: {
+            type: Object
+          }
+        };
+      }
+
+      json(obj) {
+        console.log("here");
+        return JSON.stringify(obj, null, 2);
+      }
+
+      getLaunchYears(launches) {
+        let years = launches.map(launch => launch.launch_year);
+        years = years.filter((value, index, self) => (self.indexOf(value) == index));
+        return years;
+      }
+
+      filterYear(year) {
+        if (year == 'all') {
+          return null;
+        } else {
+          return function(launch) {
+            return launch.launch_year == year;
+          }
+        }
+      }
+
+      hideLoader(){
+        let loader = this.shadowRoot.querySelector('#loader');
+        let launches = this.shadowRoot.querySelector('.scroll-area').getElementsByTagName('spacex-launch');
+        loader.classList.add('hide');
+      }
+
+      ready() {
+        super.ready();
+        this.shadowRoot.querySelector("#yearSelect").dispatchEvent(new Event('change'));
+        let infoPane = this.shadowRoot.querySelector('mission-info');
+        let scrim = this.shadowRoot.querySelector('.scrim')
+        this.shadowRoot.querySelector('dom-repeat').addEventListener('dom-change', () => {
+          this.shadowRoot.querySelectorAll('spacex-launch').forEach((el, i, list) => {
+            el.addEventListener('click', (e) => {
+              this._activeLaunch = e.target.launchData;
+              infoPane.showPane();
+              scrim.classList.add('visible')
+            });
+          });
+        });
+        scrim.addEventListener('click', (e) => {
+          infoPane.hidePane();
+          scrim.classList.remove('visible');
+        });
+      }
+    }
+
+    window.customElements.define(LaunchTimelineApp.is, LaunchTimelineApp);
+  </script>
+</dom-module>

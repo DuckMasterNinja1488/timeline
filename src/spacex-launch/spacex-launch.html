@@ -1,0 +1,166 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../launch-vehicle-elements/payload-dragon/payload-dragon.html">
+<link rel="import" href="../launch-vehicle-elements/launch-vehicle/launch-vehicle.html">
+
+<dom-module id="spacex-launch">
+  <template>
+    <link rel="stylesheet" href="[[importPath]]/spacex-launch.css">
+
+    <div class="altitude-line" id="gto"/></div>
+    <div class="altitude-line" id="leo"/></div>
+    <div class="altitude-line" id="karman"/></div>
+
+
+    <div id="altitude" orbit$="{{launchData.rocket.second_stage.payloads.0.orbit}}" launchsuccess$="{{getSuccess(launchData.launch_success)}}" payloadID$="{{launchData.rocket.second_stage.payloads.0.payload_id}}" payloadType$="{{launchData.rocket.second_stage.payloads.0.payload_type}}">
+      <svg class="triangle" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <path d="M0,98 C0,100 100,100 100,98 L 52,0 48,0Z" />
+      </svg>
+    </div>
+    <div id="landing" landingType$="{{launchData.rocket.first_stage.cores.0.landing_type}}" landingSuccess$="{{launchData.rocket.first_stage.cores.0.land_success}}">
+      <div id="landingPlatform"></div>
+      <div id="landingFalcon"></div>
+    </div>
+    <launch-vehicle vehicle-data="[[launchData.rocket]]"></launch-vehicle>
+    <p id="mission">[[launchData.rocket.second_stage.payloads.0.payload_id]]</p>
+    <time id="launchDatetime" datetime="[[launchData.launch_date_local]]"
+                              title="[[launchData.launch_date_local]]"
+                              vehicle$="[[getVehicle(launchData)]]"></time>
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+     class SpaceXLaunch extends Polymer.Element {
+       static get is() { return 'spacex-launch'; }
+       static get properties() {
+         return {
+           launchData: {
+             type: Object,
+             reflectToAttribute: true,
+             observer: '_dataChanged'
+           },
+           launchYear: {
+             type: Number,
+             computed: 'getLaunchYear(launchData)'
+           }
+         };
+       }
+
+       constructor(_launchData) {
+         super();
+         this.launchData = _launchData;
+       }
+
+      ready() {
+        super.ready();
+        this.render(this.launchData, this);
+        var visualOrbit;
+        let altitudeElement = this.shadowRoot.querySelector('#altitude');
+        let orbit = altitudeElement.getAttribute("orbit").toLowerCase();
+        switch(orbit){
+          case "leo":
+          case "iss":
+          case "po":
+          case "sso":
+            visualOrbit = "leo";
+            break;
+          case "gto":
+          case "es-l1":
+          case "hco":
+          case "heo":
+            visualOrbit = "gto";
+            break;
+        }
+
+
+        let targetAltitudeElement = this.shadowRoot.querySelector('#' + visualOrbit);
+        let vehicle = this.shadowRoot.querySelector('launch-vehicle');
+
+        setTimeout(function() {
+          requestAnimationFrame(() => {
+            let altitudeOffset = targetAltitudeElement.getBoundingClientRect().top;
+            targetAltitudeElement.getBoundingClientRect().mar
+            let vehicleOffset = vehicle.getBoundingClientRect().top;
+            let altitudeHeight = vehicleOffset - altitudeOffset - 8;
+            if (altitudeElement.getAttribute("launchsuccess") != null) {
+              altitudeElement.style.height = altitudeHeight + 5 + "px";
+            }
+            else {
+              // Hardcoding failure altitude for now
+              let payload = altitudeElement.getAttribute("payloadID");
+              // console.log(payload);
+
+              if(payload == "FalconSAT-2"){
+                altitudeElement.style.height = (altitudeHeight/7) + "px";
+              }
+              else if(payload == "DemoSAT"){
+                altitudeElement.style.height = (6*altitudeHeight/7) + "px";
+              }
+              else if(payload == "Trailblazer"){
+                altitudeElement.style.height = (9*altitudeHeight/10) + "px";
+              }
+              else if(payload == "SpaceX CRS-7"){
+                altitudeElement.style.height = (4*altitudeHeight/7) + "px";
+              }
+              else if(payload == "Amos-6"){
+                altitudeElement.style.height = 0 + "px";
+              }
+            }
+
+            altitudeElement.style.marginBottom = "-" + (vehicle.getBoundingClientRect().top - altitudeElement.getBoundingClientRect().bottom - 16) + "px";
+          });
+        }, 1000);
+      }
+
+
+       fetchData(launchNum, callback) {
+         fetch(`https://v2-test.herokuapp.com/v2/launches?flight_number=${launchNum}`).then((res) => {
+           return res.json();
+         }).then((json) => {
+           callback(json[0], this);
+         }).catch((err) => {
+           console.error(err);
+         });
+       }
+
+       render(data, el) {
+         let dom = el.shadowRoot;
+
+         let launchDate = new Date(data.launch_date_local);
+         let datetime = dom.querySelector('#launchDatetime');
+         datetime.textContent = launchDate.toLocaleDateString(navigator.userLanguage, {month: 'short', day: '2-digit'});
+       }
+
+       _dataChanged(newValue, oldValue) {
+         this.render(newValue, this);
+       }
+
+       customerString(payload) {
+         return payload.customers.join('/');
+       }
+
+       getLaunchYear(launch) {
+         return parseInt(launch.launch_year);
+       }
+
+       getSuccess(isSuccessful){
+         return isSuccessful ? true : false;
+       }
+
+       getVehicle(data){
+         let vehicle = data.rocket.rocket_id;
+         let engine = data.rocket.rocket_type;
+
+         if(vehicle == "falcon1"){
+            return "falcon1";
+         } else {
+            return vehicle + engine;
+         }
+       }
+     }
+
+     window.customElements.define(SpaceXLaunch.is, SpaceXLaunch);
+  </script>
+</dom-module>

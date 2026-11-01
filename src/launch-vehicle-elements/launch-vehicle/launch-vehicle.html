@@ -1,0 +1,114 @@
+<link rel="import" href="../../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../../bower_components/polymer/lib/elements/dom-if.html">
+<link rel="import" href="../../../bower_components/neon-animation/web-animations.html">
+<link rel="import" href="../../../bower_components/paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../payload-dragon/payload-dragon.html">
+<link rel="import" href="../payload-fairing/payload-fairing.html">
+
+<dom-module id="launch-vehicle">
+  <template>
+    <link rel="stylesheet" href="[[importPath]]/launch-vehicle.css">
+    <div class="rocket-area">
+      <img src="[[payloadImagePath]]" id="payloadImage" style="display: [[_payloadDisplay]];">
+      <img src="./images/falcon-svg/[[buildBoosterImage(vehicleData,landingAttempt)]].svg" id="boosterImage">
+      <paper-tooltip for="boosterImage" position="right">
+        <h2>Core [[vehicleData.first_stage.cores.0.core_serial]] - [[vehicleData.rocket_name]] [[vehicleData.rocket_type]]</h2>
+        <ul>
+          <li>Reusable: [[isReusable(landingAttempt)]]</li>
+        </ul>
+      </paper-tooltip>
+    <div>
+
+  </template>
+
+  <script>
+    /**
+     * @customElement launch-vehicle
+     * @polymer
+     */
+     class LaunchVehicle extends Polymer.Element {
+       static get is() { return 'launch-vehicle'; }
+       static get properties() {
+         return {
+           vehicleData: {
+             type: Object,
+             reflectToAttribute: true,
+             value: { rocket_id: 'unknown', rocket_name: 'Unknown Rocket', rocket_type: 'Unknown Type'}
+           },
+           payloadType: {
+             type: String,
+             computed: '_getPayloadType(vehicleData)'
+           },
+           landingAttempt: {
+             type: Boolean,
+             computed: 'hasLanding(vehicleData)'
+           },
+           isDragon: {
+             type: Boolean,
+             computed: '_isPayloadDragon(payloadType)'
+           },
+           payloadImagePath: {
+             type: String,
+             computed: '_payloadImagePath(isDragon)'
+           },
+           _payloadDisplay: {
+             type: String,
+             computed: '_getPayloadDisplay(vehicleData)'
+           }
+         };
+       }
+
+       vehicleDataString(data) {
+         return JSON.stringify(data);
+       }
+
+       hasLanding(data) {
+         return (data.first_stage.cores[0].landing_type != null && data.first_stage.cores[0].landing_type != "Ocean");
+       }
+
+       buildBoosterImage(vehicleData, landingAttempt){
+         let imagePath = vehicleData.rocket_id;
+         let isReuse = landingAttempt ? "reuse" : "expendable";
+
+         if (vehicleData.rocket_id == "falcon9") {
+           if (vehicleData.rocket_type == "v1.0") {
+             imagePath += "-" + vehicleData.rocket_type;
+           } else if (vehicleData.rocket_type == "v1.1") {
+             imagePath += "-" + vehicleData.rocket_type + "-" + isReuse;
+           } else if (vehicleData.rocket_type == "v1.2" || vehicleData.rocket_type == "FT") {
+             imagePath += "-v1.2-" + isReuse;
+           }
+         }
+         return imagePath;
+       }
+
+       _payloadImagePath(dragon) {
+         return `./images/falcon-svg/payload/${dragon ? "dragon" : "fairing"}.svg`;
+       }
+
+       _getPayloadDisplay(vehicle) {
+         if (vehicle.rocket_id == 'falcon1') {
+           return 'none';
+         } else return 'block';
+       }
+
+       _getPayloadType(data) {
+         return data.second_stage.payloads[0].payload_type;
+       }
+
+       _isPayloadDragon(_payloadType) {
+         return _payloadType.toLowerCase().includes('dragon');
+       }
+
+       _satellite() {
+         return !this.isDragon && (this.vehicleData.rocket_id != 'falcon1');
+       }
+
+       isReusable(landingAttempt) {
+         return landingAttempt ? "Yes" : "No";
+       }
+     }
+
+     window.customElements.define(LaunchVehicle.is, LaunchVehicle);
+  </script>
+</dom-module>
